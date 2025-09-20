@@ -1,7 +1,7 @@
 // script.js - DerbyFunScan versión pública para Vercel
 
 const CONFIG = {
-    HOLDERS_API: 'http://191.96.39.186:3001/api',
+    HOLDERS_API: 'https://b5d8fe120b27.ngrok-free.app/api',
     SITE_URL: window.location.origin,
     UPDATE_INTERVAL: 30000
 };
