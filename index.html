@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DerbyFunScan - Race Analytics & Transparency</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+        }
+
+        .header h1 {
+            font-size: 36px;
+            color: #000;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header .subtitle {
+            color: #333;
+            font-size: 16px;
+        }
+
+        .horse-icon {
+            font-size: 40px;
+        }
+
+        /* Live Ticker */
+        .live-ticker {
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid #FFD700;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .ticker-content {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            animation: scroll-left 30s linear infinite;
+        }
+
+        @keyframes scroll-left {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        .ticker-item {
+            white-space: nowrap;
+            padding: 0 20px;
+            color: #FFD700;
+        }
+
+        /* Search Section */
+        .search-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .search-title {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #FFD700;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #FFD700;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+
+        .search-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            border: none;
+            border-radius: 10px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .search-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Search Results */
+        .search-results {
+            display: none;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #FFD700;
+        }
+
+        .search-results.active {
+            display: block;
+        }
+
+        .wallet-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            background: rgba(255, 215, 0, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        /* Main Grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Panel */
+        .panel {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+        }
+
+        .panel h2 {
+            font-size: 22px;
+            margin-bottom: 20px;
+            color: #FFD700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Winners Table */
+        .winners-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .winners-table th {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 2px solid #FFD700;
+            color: #FFD700;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .winners-table td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+            font-size: 14px;
+        }
+
+        .winners-table tr:hover {
+            background: rgba(255, 215, 0, 0.05);
+        }
+
+        .wallet-link {
+            color: #4CAF50;
+            text-decoration: none;
+            font-family: monospace;
+            transition: all 0.3s;
+        }
+
+        .wallet-link:hover {
+            color: #FFD700;
+            text-decoration: underline;
+        }
+
+        .tx-link {
+            color: #00BFFF;
+            text-decoration: none;
+            font-size: 20px;
+        }
+
+        .tx-link:hover {
+            color: #FFD700;
+        }
+
+        /* Global Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .global-stat {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 165, 0, 0.1));
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            text-align: center;
+        }
+
+        .global-stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #FFD700;
+            margin-bottom: 5px;
+        }
+
+        .global-stat-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+        }
+
+        /* Hall of Fame */
+        .hall-of-fame {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.1));
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .fame-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .fame-rank {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFD700;
+            width: 40px;
+        }
+
+        .fame-wallet {
+            flex: 1;
+            color: #4CAF50;
+            font-family: monospace;
+        }
+
+        .fame-wins {
+            font-size: 18px;
+            font-weight: bold;
+            color: #FFF;
+        }
+
+        /* Next Race Timer */
+        .next-race {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .next-race-label {
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .next-race-timer {
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 215, 0, 0.3);
+            border-top-color: #FFD700;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Medals */
+        .medal {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+        }
+
+        .medal.gold { color: #FFD700; }
+        .medal.silver { color: #C0C0C0; }
+        .medal.bronze { color: #CD7F32; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                <span class="horse-icon">🐎</span>
+                DerbyFunScan
+            </h1>
+            <p class="subtitle">Real-time Race Analytics & Prize Transparency for Pump.fun Derby</p>
+        </div>
+
+        <!-- Live Ticker -->
+        <div class="live-ticker">
+            <div class="ticker-content" id="ticker">
+                <span class="ticker-item">🏆 Welcome to DerbyFunScan - Track all races and winners!</span>
+                <span class="ticker-item">💰 Total prizes distributed: <span id="ticker-total-prizes">0.0000</span> SOL</span>
+                <span class="ticker-item">🏇 Total races: <span id="ticker-total-races">0</span></span>
+            </div>
+        </div>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <h3 class="search-title">🔍 Search Wallet Statistics</h3>
+            <div class="search-box">
+                <input type="text" class="search-input" id="searchInput" 
+                       placeholder="Enter wallet address to see race statistics...">
+                <button class="search-btn" onclick="searchWallet()">Search</button>
+            </div>
+            <div class="search-results" id="searchResults"></div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Left Panel - Recent Winners -->
+            <div class="panel">
+                <h2>🏆 Last 20 Winners</h2>
+                <div id="recentWinners">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Loading winners...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Stats & Hall of Fame -->
+            <div>
+                <!-- Next Race Timer -->
+                <div class="next-race">
+                    <div class="next-race-label">Next Race In:</div>
+                    <div class="next-race-timer" id="nextRaceTimer">--:--</div>
+                </div>
+
+                <!-- Global Stats -->
+                <div class="panel" style="margin-bottom: 20px;">
+                    <h2>📊 Global Statistics</h2>
+                    <div class="stats-grid">
+                        <div class="global-stat">
+                            <div class="global-stat-value" id="totalRaces">0</div>
+                            <div class="global-stat-label">Total Races</div>
+                        </div>
+                        <div class="global-stat">
+                            <div class="global-stat-value" id="totalPrizes">0</div>
+                            <div class="global-stat-label">SOL Distributed</div>
+                        </div>
+                        <div class="global-stat">
+                            <div class="global-stat-value" id="uniqueWinners">0</div>
+                            <div class="global-stat-label">Unique Winners</div>
+                        </div>
+                        <div class="global-stat">
+                            <div class="global-stat-value" id="todayRaces">0</div>
+                            <div class="global-stat-label">Today's Races</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hall of Fame -->
+                <div class="panel">
+                    <h2>👑 Hall of Fame - Top Winners</h2>
+                    <div id="hallOfFame">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="derbyfunscan.js"></script>
+</body>
+</html>
