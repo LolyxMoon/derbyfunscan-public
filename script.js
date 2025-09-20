@@ -1,7 +1,7 @@
 // script.js - DerbyFunScan versión pública para Vercel
 
 const CONFIG = {
-    HOLDERS_API: 'https://api-holder-pumpfun.onrender.com',
+    HOLDERS_API: 'http://191.96.39.186:3001/api',
     SITE_URL: window.location.origin,
     UPDATE_INTERVAL: 30000
 };
