@@ -321,7 +321,7 @@ function updateHallOfFame() {
     const winners = publicRaceData.races || [];
     
     if (winners.length === 0) {
-        container.innerHTML = `<div class="loading">No winners yet</div>`;
+        container.innerHTML = '<div class="loading">No winners yet</div>';
         return;
     }
     
@@ -355,14 +355,14 @@ function updateHallOfFame() {
         .slice(0, 10);
     
     if (topWinners.length === 0) {
-        container.innerHTML = `<div class="loading">No completed races yet</div>`;
+        container.innerHTML = '<div class="loading">No completed races yet</div>';
         return;
     }
     
     let html = '<div class="hall-of-fame">';
     
     topWinners.forEach((winner, index) => {
-        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '#' + (index + 1);
         const shortAddress = winner.address.substring(0, 8) + '...' + winner.address.substring(winner.address.length - 4);
         
         // Color basado en las ganancias
@@ -370,22 +370,14 @@ function updateHallOfFame() {
         if (winner.totalEarnings >= 0.1) earningsColor = '#FFD700';
         if (winner.totalEarnings >= 0.5) earningsColor = '#FF6B6B';
         
-        html += `
-            <div class="fame-item" style="cursor: pointer;" onclick="searchSpecificWallet('${winner.address}')">
-                <span class="fame-rank">${medal}</span>
-                <span class="fame-wallet" style="flex: 1;">
-                    ${shortAddress}
-                </span>
-                <span style="display: flex; flex-direction: column; align-items: flex-end; font-size: 11px;">
-                    <span style="color: ${earningsColor}; font-weight: bold; font-size: 13px;">
-                        ${winner.totalEarnings.toFixed(4)} SOL
-                    </span>
-                    <span style="color: #999;">
-                        ${winner.totalWins} win${winner.totalWins > 1 ? 's' : ''}
-                    </span>
-                </span>
-            </div>
-        `;
+        html += '<div class="fame-item" style="cursor: pointer;" onclick="searchSpecificWallet(\'' + winner.address + '\')">';
+        html += '<span class="fame-rank">' + medal + '</span>';
+        html += '<span class="fame-wallet" style="flex: 1;">' + shortAddress + '</span>';
+        html += '<span style="display: flex; flex-direction: column; align-items: flex-end; font-size: 11px;">';
+        html += '<span style="color: ' + earningsColor + '; font-weight: bold; font-size: 13px;">';
+        html += winner.totalEarnings.toFixed(4) + ' SOL</span>';
+        html += '<span style="color: #999;">' + winner.totalWins + ' win' + (winner.totalWins > 1 ? 's' : '') + '</span>';
+        html += '</span></div>';
     });
     
     html += '</div>';
@@ -396,20 +388,13 @@ function updateHallOfFame() {
     );
     const uniqueWinnersCount = Object.keys(winnerStats).length;
     
-    html += `
-        <div style="margin-top: 15px; padding: 10px; background: rgba(255,215,0,0.1); border-radius: 5px; text-align: center;">
-            <div style="display: flex; justify-content: space-around; font-size: 11px;">
-                <div>
-                    <div style="color: #999;">Total Paid</div>
-                    <div style="color: #FFD700; font-weight: bold;">${totalPrizesPaid.toFixed(3)} SOL</div>
-                </div>
-                <div>
-                    <div style="color: #999;">Unique Winners</div>
-                    <div style="color: #4CAF50; font-weight: bold;">${uniqueWinnersCount}</div>
-                </div>
-            </div>
-        </div>
-    `;
+    html += '<div style="margin-top: 15px; padding: 10px; background: rgba(255,215,0,0.1); border-radius: 5px; text-align: center;">';
+    html += '<div style="display: flex; justify-content: space-around; font-size: 11px;">';
+    html += '<div><div style="color: #999;">Total Paid</div>';
+    html += '<div style="color: #FFD700; font-weight: bold;">' + totalPrizesPaid.toFixed(3) + ' SOL</div></div>';
+    html += '<div><div style="color: #999;">Unique Winners</div>';
+    html += '<div style="color: #4CAF50; font-weight: bold;">' + uniqueWinnersCount + '</div></div>';
+    html += '</div></div>';
     
     container.innerHTML = html;
 }
@@ -444,7 +429,7 @@ function searchSpecificWallet(address) {
     
     html += '</div>';
     container.innerHTML = html;
-}
+
 
 // Timer de próxima carrera
 function updateNextRaceTimer() {
