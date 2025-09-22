@@ -315,15 +315,110 @@ function updateGlobalStats() {
     if (tickerRaces) tickerRaces.textContent = winners.length;
 }
 
-// Hall of Fame - TOP HOLDERS (no ganadores)
+// Hall of Fame - TOP GANADORES (los que más premios han ganado)
 function updateHallOfFame() {
     const container = document.getElementById('hallOfFame');
-    const holders = publicRaceData.holders || [];
+    const winners = publicRaceData.races || [];
     
-    if (holders.length === 0) {
-        container.innerHTML = `<div class="loading">Loading top holders...</div>`;
+    if (winners.length === 0) {
+        container.innerHTML = `<div class="loading">No winners yet</div>`;
         return;
     }
+    
+    // Agrupar ganadores por wallet y sumar premios
+    const winnerStats = {};
+    
+    winners.forEach(winner => {
+        if (winner.walletAddress && winner.paymentStatus === 'completed') {
+            if (!winnerStats[winner.walletAddress]) {
+                winnerStats[winner.walletAddress] = {
+                    address: winner.walletAddress,
+                    totalWins: 0,
+                    totalEarnings: 0,
+                    lastWin: winner.timestamp
+                };
+            }
+            
+            winnerStats[winner.walletAddress].totalWins += 1;
+            winnerStats[winner.walletAddress].totalEarnings += (winner.prizeAmount || 0.005);
+            
+            // Actualizar última victoria si es más reciente
+            if (new Date(winner.timestamp) > new Date(winnerStats[winner.walletAddress].lastWin)) {
+                winnerStats[winner.walletAddress].lastWin = winner.timestamp;
+            }
+        }
+    });
+    
+    // Convertir a array y ordenar por ganancias totales
+    const topWinners = Object.values(winnerStats)
+        .sort((a, b) => b.totalEarnings - a.totalEarnings)
+        .slice(0, 10);
+    
+    if (topWinners.length === 0) {
+        container.innerHTML = `<div class="loading">No completed races yet</div>`;
+        return;
+    }
+    
+    let html = '<div class="hall-of-fame">';
+    
+    topWinners.forEach((winner, index) => {
+        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+        const shortAddress = winner.address.substring(0, 8) + '...' + winner.address.substring(winner.address.length - 4);
+        
+        // Color basado en las ganancias
+        let earningsColor = '#4CAF50';
+        if (winner.totalEarnings >= 0.1) earningsColor = '#FFD700';
+        if (winner.totalEarnings >= 0.5) earningsColor = '#FF6B6B';
+        
+        html += `
+            <div class="fame-item" style="cursor: pointer;" onclick="searchSpecificWallet('${winner.address}')">
+                <span class="fame-rank">${medal}</span>
+                <span class="fame-wallet" style="flex: 1;">
+                    ${shortAddress}
+                </span>
+                <span style="display: flex; flex-direction: column; align-items: flex-end; font-size: 11px;">
+                    <span style="color: ${earningsColor}; font-weight: bold; font-size: 13px;">
+                        ${winner.totalEarnings.toFixed(4)} SOL
+                    </span>
+                    <span style="color: #999;">
+                        ${winner.totalWins} win${winner.totalWins > 1 ? 's' : ''}
+                    </span>
+                </span>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    
+    // Agregar estadísticas totales al final
+    const totalPrizesPaid = winners.reduce((sum, w) => 
+        w.paymentStatus === 'completed' ? sum + (w.prizeAmount || 0.005) : sum, 0
+    );
+    const uniqueWinnersCount = Object.keys(winnerStats).length;
+    
+    html += `
+        <div style="margin-top: 15px; padding: 10px; background: rgba(255,215,0,0.1); border-radius: 5px; text-align: center;">
+            <div style="display: flex; justify-content: space-around; font-size: 11px;">
+                <div>
+                    <div style="color: #999;">Total Paid</div>
+                    <div style="color: #FFD700; font-weight: bold;">${totalPrizesPaid.toFixed(3)} SOL</div>
+                </div>
+                <div>
+                    <div style="color: #999;">Unique Winners</div>
+                    <div style="color: #4CAF50; font-weight: bold;">${uniqueWinnersCount}</div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+// Función auxiliar para buscar una wallet específica cuando se hace click en el Hall of Fame
+function searchSpecificWallet(address) {
+    document.getElementById('searchInput').value = address;
+    searchWallet();
+}
     
     // Ordenar por balance
     const topHolders = holders
