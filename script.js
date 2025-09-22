@@ -1,14 +1,15 @@
-// script.js - DerbyFunScan versión pública para Vercel
+// script.js - Versión corregida para el Dashboard
 
 const CONFIG = {
-    HOLDERS_API: 'https://b5d8fe120b27.ngrok-free.app/api',
+    HOLDERS_API: 'https://b5d8fe120b27.ngrok-free.app',
     SITE_URL: window.location.origin,
     UPDATE_INTERVAL: 30000
 };
 
 // Estado global
 let publicRaceData = {
-    races: [],
+    races: [],        // Para ganadores de carreras
+    holders: [],      // Para holders del token
     walletStats: {},
     lastUpdate: null
 };
@@ -20,13 +21,13 @@ const NGROK_HEADERS = {
 
 // Inicializar
 async function init() {
-    console.log('🐎 DerbyFunScan Public - Initializing...');
+    console.log('🎏 DerbyFunScan Public - Initializing...');
     
     // Cargar datos desde localStorage
     loadLocalData();
     
-    // Intentar cargar datos frescos desde la API
-    await fetchHoldersData();
+    // Cargar datos frescos
+    await fetchAllData();
     
     // Actualizar UI
     updateUI();
@@ -36,7 +37,7 @@ async function init() {
     setInterval(updateNextRaceTimer, 1000);
     
     // Actualizar datos periódicamente
-    setInterval(fetchHoldersData, CONFIG.UPDATE_INTERVAL);
+    setInterval(fetchAllData, CONFIG.UPDATE_INTERVAL);
 }
 
 // Cargar datos locales
@@ -45,7 +46,7 @@ function loadLocalData() {
     if (stored) {
         try {
             publicRaceData = JSON.parse(stored);
-            console.log(`Loaded ${publicRaceData.races?.length || 0} races from cache`);
+            console.log(`Loaded data from cache`);
         } catch (e) {
             console.error('Error loading local data:', e);
         }
@@ -57,64 +58,75 @@ function saveLocalData() {
     localStorage.setItem('derbyPublicData', JSON.stringify(publicRaceData));
 }
 
-// Obtener datos de holders desde tu API
-async function fetchHoldersData() {
-    try {
-        // Obtener stats generales
-        const statsResponse = await fetch(`${CONFIG.HOLDERS_API}/stats`, {
-            headers: NGROK_HEADERS
-        });
-        
-        if (statsResponse.ok) {
-            const statsData = await statsResponse.json();
-            console.log('Stats received:', statsData);
-            
-            if (statsData.success && statsData.data) {
-                // Actualizar datos con lo que viene de tu API
-                publicRaceData.totalRaces = statsData.data.totalRaces || 0;
-                publicRaceData.totalWallets = statsData.data.currentWalletsCount || 0;
-                publicRaceData.lastUpdate = statsData.data.lastUpdate;
-                publicRaceData.topHolder = statsData.data.topHolder;
-                
-                // Obtener lista de holders
-                await fetchHoldersList();
-                
-                saveLocalData();
-                updateUI();
-                console.log('✅ Data updated from API');
-            }
-        }
-    } catch (error) {
-        console.error('Error fetching holders data:', error);
-    }
+// Obtener TODOS los datos
+async function fetchAllData() {
+    await Promise.all([
+        fetchWinnersData(),
+        fetchHoldersData(),
+        fetchStatsData()
+    ]);
+    
+    saveLocalData();
+    updateUI();
 }
 
-// Obtener lista de holders
-async function fetchHoldersList() {
+// Obtener datos de GANADORES (no holders)
+async function fetchWinnersData() {
     try {
-        const response = await fetch(`${CONFIG.HOLDERS_API}/holders`, {
+        const response = await fetch(`${CONFIG.HOLDERS_API}/winners`, {
             headers: NGROK_HEADERS
         });
         
         if (response.ok) {
             const data = await response.json();
             if (data.success && data.data) {
-                // Convertir holders a formato de "races" para mostrar
-                publicRaceData.races = data.data.slice(0, 20).map((holder, index) => ({
-                    id: index + 1,
-                    winner: holder.address,
-                    balance: holder.balance,
-                    percentage: holder.percentage,
-                    timestamp: holder.lastSeen || holder.addedAt
-                }));
+                publicRaceData.races = data.data;
+                console.log(`✅ ${data.data.length} winners loaded`);
             }
         }
     } catch (error) {
-        console.error('Error fetching holders list:', error);
+        console.error('Error fetching winners:', error);
     }
 }
 
-// Buscar wallet
+// Obtener datos de HOLDERS (solo para Hall of Fame y búsqueda)
+async function fetchHoldersData() {
+    try {
+        const response = await fetch(`${CONFIG.HOLDERS_API}/api/holders`, {
+            headers: NGROK_HEADERS
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.data) {
+                publicRaceData.holders = data.data;
+                console.log(`✅ ${data.data.length} holders loaded`);
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching holders:', error);
+    }
+}
+
+// Obtener estadísticas
+async function fetchStatsData() {
+    try {
+        const response = await fetch(`${CONFIG.HOLDERS_API}/api/stats`, {
+            headers: NGROK_HEADERS
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.data) {
+                publicRaceData.stats = data.data;
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching stats:', error);
+    }
+}
+
+// Buscar wallet (en holders Y winners)
 async function searchWallet() {
     const address = document.getElementById('searchInput').value.trim();
     
@@ -127,73 +139,97 @@ async function searchWallet() {
     results.classList.add('active');
     
     try {
-        // Buscar en la API de holders
-        const response = await fetch(`${CONFIG.HOLDERS_API}/holders`, {
+        // Buscar en ganadores
+        const winnersResponse = await fetch(`${CONFIG.HOLDERS_API}/api/winners/wallet/${address}`, {
             headers: NGROK_HEADERS
         });
         
-        if (response.ok) {
-            const data = await response.json();
-            if (data.success && data.data) {
-                const holder = data.data.find(h => 
-                    h.address.toLowerCase() === address.toLowerCase()
-                );
-                
-                if (holder) {
-                    results.innerHTML = `
-                        <h4 style="color: #4CAF50; margin-bottom: 15px;">✅ Wallet Found - Active Holder</h4>
-                        <div class="wallet-stats">
-                            <div class="stat-item">
-                                <div class="stat-label">Balance</div>
-                                <div class="stat-value">${(holder.balance / 1e6).toFixed(2)}M</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-label">Percentage</div>
-                                <div class="stat-value">${holder.percentage.toFixed(2)}%</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-label">Rank</div>
-                                <div class="stat-value">#${holder.rank || data.data.indexOf(holder) + 1}</div>
-                            </div>
-                        </div>
-                    `;
-                    return;
-                }
+        let winnerData = null;
+        if (winnersResponse.ok) {
+            const result = await winnersResponse.json();
+            if (result.success && result.totalWins > 0) {
+                winnerData = result;
             }
         }
         
-        results.innerHTML = `
-            <h4 style="color: #FF6B6B;">❌ Wallet Not Found</h4>
-            <p style="color: #999;">This wallet is not in the current holders list.</p>
-        `;
+        // Buscar en holders
+        const holder = publicRaceData.holders.find(h => 
+            h.address.toLowerCase() === address.toLowerCase()
+        );
+        
+        if (!winnerData && !holder) {
+            results.innerHTML = `
+                <h4 style="color: #FF6B6B;">❌ Wallet Not Found</h4>
+                <p style="color: #999;">This wallet is not a holder or winner.</p>
+            `;
+            return;
+        }
+        
+        let html = `<h4 style="color: #4CAF50; margin-bottom: 15px;">✅ Wallet Found</h4>`;
+        
+        // Info de holder
+        if (holder) {
+            html += `
+                <div style="margin-bottom: 20px;">
+                    <h5 style="color: #FFD700;">🪙 Token Holder:</h5>
+                    <div class="wallet-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">Balance</div>
+                            <div class="stat-value">${(holder.balance / 1e6).toFixed(2)}M</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Percentage</div>
+                            <div class="stat-value">${holder.percentage?.toFixed(2) || '0'}%</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Info de ganador
+        if (winnerData) {
+            html += `
+                <div style="margin-bottom: 20px;">
+                    <h5 style="color: #FFD700;">🏆 Race Winner:</h5>
+                    <div class="wallet-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">Total Wins</div>
+                            <div class="stat-value">${winnerData.totalWins}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Total Earnings</div>
+                            <div class="stat-value">${winnerData.totalEarnings.toFixed(4)} SOL</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        results.innerHTML = html;
         
     } catch (error) {
         console.error('Error searching wallet:', error);
-        results.innerHTML = `
-            <h4 style="color: #FF6B6B;">Error</h4>
-            <p style="color: #999;">Could not search wallet. Please try again.</p>
-        `;
+        results.innerHTML = `<h4 style="color: #FF6B6B;">Error</h4>`;
     }
 }
-// Actualizar UI con datos
+
+// Actualizar UI
 function updateUI() {
     updateRecentWinners();
     updateGlobalStats();
     updateHallOfFame();
 }
 
-// Actualizar "ganadores recientes" (ahora mostrando top holders)
+// Actualizar tabla de GANADORES (NO holders)
 function updateRecentWinners() {
     const container = document.getElementById('recentWinners');
-    const races = publicRaceData.races || [];
+    const winners = publicRaceData.races || [];
     
-    if (races.length === 0) {
+    if (winners.length === 0) {
         container.innerHTML = `
             <div class="loading">
-                <p style="color: #666;">Loading holders data...</p>
-                <p style="color: #999; font-size: 12px; margin-top: 10px;">
-                    Connecting to API...
-                </p>
+                <p style="color: #666;">No race winners yet</p>
+                <p style="color: #999; font-size: 12px;">Waiting for races to complete...</p>
             </div>
         `;
         return;
@@ -203,35 +239,47 @@ function updateRecentWinners() {
         <table class="winners-table">
             <thead>
                 <tr>
-                    <th>Rank</th>
-                    <th>Wallet</th>
-                    <th>Balance</th>
-                    <th>%</th>
-                    <th>Link</th>
+                    <th>Race</th>
+                    <th>Winner</th>
+                    <th>Horse</th>
+                    <th>Prize</th>
+                    <th>Time</th>
+                    <th>Tx</th>
                 </tr>
             </thead>
             <tbody>
     `;
     
-    races.forEach((holder, index) => {
+    winners.slice(0, 20).forEach((winner, index) => {
         const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
-        const solscanUrl = `https://solscan.io/account/${holder.winner}`;
-        const balance = holder.balance ? (holder.balance / 1e6).toFixed(2) : '0';
+        const walletUrl = `https://solscan.io/account/${winner.walletAddress}`;
+        const txUrl = winner.paymentTxHash ? 
+            `https://solscan.io/tx/${winner.paymentTxHash}` : '#';
+        
+        const shortWallet = winner.walletAddress ? 
+            winner.walletAddress.substring(0, 6) + '...' + winner.walletAddress.substring(winner.walletAddress.length - 4) : 
+            'Unknown';
+        
+        const timeAgo = winner.timestamp ? getTimeAgo(winner.timestamp) : 'Just now';
         
         html += `
             <tr>
-                <td>${medal} ${index + 1}</td>
+                <td>${medal} #${winner.raceId || '-'}</td>
                 <td>
-                    <a href="${solscanUrl}" target="_blank" class="wallet-link">
-                        ${holder.winner ? 
-                            holder.winner.substring(0, 6) + '...' + holder.winner.substring(holder.winner.length - 4) : 
-                            'Unknown'}
+                    <a href="${walletUrl}" target="_blank" class="wallet-link">
+                        ${shortWallet}
                     </a>
                 </td>
-                <td style="color: #4CAF50; font-weight: bold;">${balance}M</td>
-                <td style="color: #FFD700;">${holder.percentage?.toFixed(2) || '0'}%</td>
+                <td>${winner.horseNumber || '-'}</td>
+                <td style="color: #FFD700; font-weight: bold;">
+                    ${winner.prizeAmount || '0.005'} SOL
+                </td>
+                <td style="color: #999; font-size: 12px;">${timeAgo}</td>
                 <td>
-                    <a href="${solscanUrl}" target="_blank" class="tx-link">🔗</a>
+                    ${winner.paymentTxHash ? 
+                        `<a href="${txUrl}" target="_blank" class="tx-link" title="View payment">🔗</a>` :
+                        '<span style="color: #666;">Pending</span>'
+                    }
                 </td>
             </tr>
         `;
@@ -243,70 +291,75 @@ function updateRecentWinners() {
 
 // Actualizar estadísticas globales
 function updateGlobalStats() {
-    const totalRaces = publicRaceData.totalRaces || 0;
-    const totalWallets = publicRaceData.totalWallets || 0;
-    const races = publicRaceData.races || [];
+    const stats = publicRaceData.stats || {};
+    const winners = publicRaceData.races || [];
+    const holders = publicRaceData.holders || [];
     
-    // Top holder info
-    const topHolder = publicRaceData.topHolder;
-    const topBalance = topHolder ? (topHolder.balance / 1e9).toFixed(2) : '0';
+    // Calcular estadísticas de ganadores
+    const totalPrizes = winners.reduce((sum, w) => sum + (w.prizeAmount || 0.005), 0);
+    const uniqueWinners = new Set(winners.map(w => w.walletAddress)).size;
     
-    // Actualizar elementos
-    document.getElementById('totalRaces').textContent = totalRaces;
-    document.getElementById('totalPrizes').textContent = topBalance + 'B';
-    document.getElementById('uniqueWinners').textContent = totalWallets;
-    document.getElementById('todayRaces').textContent = races.length;
+    document.getElementById('totalRaces').textContent = winners.length;
+    document.getElementById('totalPrizes').textContent = totalPrizes.toFixed(2);
+    document.getElementById('uniqueWinners').textContent = uniqueWinners;
+    document.getElementById('todayRaces').textContent = 
+        winners.filter(w => {
+            const today = new Date().toDateString();
+            return new Date(w.timestamp).toDateString() === today;
+        }).length;
     
     // Ticker
     const tickerPrizes = document.getElementById('ticker-total-prizes');
     const tickerRaces = document.getElementById('ticker-total-races');
-    if (tickerPrizes) tickerPrizes.textContent = topBalance;
-    if (tickerRaces) tickerRaces.textContent = totalRaces;
+    if (tickerPrizes) tickerPrizes.textContent = totalPrizes.toFixed(4);
+    if (tickerRaces) tickerRaces.textContent = winners.length;
 }
 
-// Actualizar Hall of Fame (top holders)
+// Hall of Fame - TOP HOLDERS (no ganadores)
 function updateHallOfFame() {
     const container = document.getElementById('hallOfFame');
-    const races = publicRaceData.races || [];
+    const holders = publicRaceData.holders || [];
     
-    if (races.length === 0) {
-        container.innerHTML = `
-            <div class="loading">
-                <p style="color: #666;">Loading top holders...</p>
-            </div>
-        `;
+    if (holders.length === 0) {
+        container.innerHTML = `<div class="loading">Loading top holders...</div>`;
         return;
     }
     
+    // Ordenar por balance
+    const topHolders = holders
+        .sort((a, b) => b.balance - a.balance)
+        .slice(0, 10);
+    
     let html = '<div class="hall-of-fame">';
-    races.slice(0, 10).forEach((holder, index) => {
+    
+    topHolders.forEach((holder, index) => {
         const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
-        const balance = holder.balance ? (holder.balance / 1e6).toFixed(1) : '0';
+        const balance = (holder.balance / 1e6).toFixed(1);
         
         html += `
             <div class="fame-item">
                 <span class="fame-rank">${medal}</span>
                 <span class="fame-wallet">
-                    ${holder.winner.substring(0, 8)}...${holder.winner.substring(holder.winner.length - 4)}
+                    ${holder.address.substring(0, 8)}...${holder.address.substring(holder.address.length - 4)}
                 </span>
                 <span class="fame-wins">${balance}M tokens</span>
             </div>
         `;
     });
+    
     html += '</div>';
     container.innerHTML = html;
 }
 
-// Timer de próxima actualización (en lugar de carrera)
+// Timer de próxima carrera
 function updateNextRaceTimer() {
     const timer = document.getElementById('nextRaceTimer');
     if (!timer) return;
     
+    // Calcular próxima carrera (cada 2 minutos)
     const now = Date.now();
-    const updateInterval = 5 * 60000; // 5 minutos
-    const lastUpdate = publicRaceData.lastUpdate ? new Date(publicRaceData.lastUpdate).getTime() : now;
-    const nextUpdate = lastUpdate + updateInterval;
-    const timeToNext = Math.max(0, nextUpdate - now);
+    const nextRace = Math.ceil(now / 120000) * 120000;
+    const timeToNext = Math.max(0, nextRace - now);
     
     const minutes = Math.floor(timeToNext / 60000);
     const seconds = Math.floor((timeToNext % 60000) / 1000);
@@ -314,7 +367,7 @@ function updateNextRaceTimer() {
     timer.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 }
 
-// Utilidades
+// Utilidad para tiempo
 function getTimeAgo(timestamp) {
     if (!timestamp) return 'Unknown';
     
@@ -325,8 +378,7 @@ function getTimeAgo(timestamp) {
     if (diff < 60) return `${diff}s ago`;
     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
     if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    if (diff < 2592000) return `${Math.floor(diff / 86400)}d ago`;
-    return `${Math.floor(diff / 2592000)}mo ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
 }
 
 // Inicializar cuando cargue
