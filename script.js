@@ -36,6 +36,10 @@ async function init() {
     updateNextRaceTimer();
     setInterval(updateNextRaceTimer, 1000);
     
+    // Timer de actualización de holders
+    updateHoldersTimer();
+    setInterval(updateHoldersTimer, 1000);
+    
     // Actualizar datos periódicamente
     setInterval(fetchAllData, CONFIG.UPDATE_INTERVAL);
 }
@@ -419,6 +423,28 @@ function updateNextRaceTimer() {
     const seconds = Math.floor((timeToNext % 60000) / 1000);
     
     timer.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+}
+
+// Timer de actualización de holders (cada 5 minutos, sincronizado globalmente)
+function updateHoldersTimer() {
+    const timer = document.getElementById('holdersTimer');
+    if (!timer) return;
+    
+    // Calcular próxima actualización de holders (cada 5 minutos)
+    const now = Date.now();
+    const updateInterval = 5 * 60 * 1000; // 5 minutos en milisegundos
+    const nextUpdate = Math.ceil(now / updateInterval) * updateInterval;
+    const timeToNext = Math.max(0, nextUpdate - now);
+    
+    const minutes = Math.floor(timeToNext / 60000);
+    const seconds = Math.floor((timeToNext % 60000) / 1000);
+    
+    timer.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    
+    // Si llegamos a 0, forzar actualización de holders
+    if (timeToNext === 0) {
+        fetchHoldersData();
+    }
 }
 
 // Utilidad para tiempo
