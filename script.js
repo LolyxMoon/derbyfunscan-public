@@ -89,7 +89,7 @@ async function fetchWinnersData() {
     }
 }
 
-// Obtener datos de HOLDERS (solo para Hall of Fame y búsqueda)
+// Obtener datos de HOLDERS (solo para búsqueda)
 async function fetchHoldersData() {
     try {
         const response = await fetch(`${CONFIG.HOLDERS_API}/api/holders`, {
@@ -404,32 +404,6 @@ function searchSpecificWallet(address) {
     document.getElementById('searchInput').value = address;
     searchWallet();
 }
-    
-    // Ordenar por balance
-    const topHolders = holders
-        .sort((a, b) => b.balance - a.balance)
-        .slice(0, 10);
-    
-    let html = '<div class="hall-of-fame">';
-    
-    topHolders.forEach((holder, index) => {
-        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
-        const balance = (holder.balance / 1e6).toFixed(1);
-        
-        html += `
-            <div class="fame-item">
-                <span class="fame-rank">${medal}</span>
-                <span class="fame-wallet">
-                    ${holder.address.substring(0, 8)}...${holder.address.substring(holder.address.length - 4)}
-                </span>
-                <span class="fame-wins">${balance}M tokens</span>
-            </div>
-        `;
-    });
-    
-    html += '</div>';
-    container.innerHTML = html;
-
 
 // Timer de próxima carrera
 function updateNextRaceTimer() {
