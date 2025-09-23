@@ -24,31 +24,84 @@
             padding: 20px;
         }
 
-        /* Header */
+        /* Header actualizado para el banner */
         .header {
             background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-            padding: 30px;
+            padding: 10px 15px;
             border-radius: 15px;
             margin-bottom: 30px;
             box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        .header h1 {
-            font-size: 36px;
-            color: #000;
-            margin-bottom: 10px;
+        .header-banner {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 8px;
+        }
+
+        /* Social Media Floating Icons */
+        .social-floating {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .social-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid #FFD700;
+            border-radius: 12px;
             display: flex;
             align-items: center;
-            gap: 15px;
+            justify-content: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
         }
 
-        .header .subtitle {
-            color: #333;
-            font-size: 16px;
+        .social-icon:hover {
+            background: #FFD700;
+            transform: translateX(-5px) scale(1.1);
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.5);
         }
 
-        .horse-icon {
-            font-size: 40px;
+        .social-icon img {
+            width: 30px;
+            height: 30px;
+            filter: brightness(0) invert(1);
+            transition: filter 0.3s ease;
+        }
+
+        .social-icon:hover img {
+            filter: brightness(0);
+        }
+
+        @media (max-width: 768px) {
+            .social-floating {
+                right: 10px;
+                gap: 10px;
+            }
+            
+            .social-icon {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .social-icon img {
+                width: 24px;
+                height: 24px;
+            }
         }
 
         /* Live Ticker */
@@ -65,7 +118,7 @@
             display: flex;
             align-items: center;
             gap: 20px;
-            animation: scroll-left 30s linear infinite;
+            animation: scroll-left 40s linear infinite;
         }
 
         @keyframes scroll-left {
@@ -86,12 +139,47 @@
             border-radius: 15px;
             margin-bottom: 30px;
             border: 1px solid rgba(255, 215, 0, 0.3);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
 
         .search-title {
             font-size: 20px;
             margin-bottom: 15px;
             color: #FFD700;
+        }
+
+        /* Holders Update Timer */
+        .holders-update-timer {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-radius: 8px;
+            margin: 0 auto 15px auto;
+            font-size: 13px;
+            color: #999;
+        }
+
+        .update-icon {
+            animation: rotate 2s linear infinite;
+            font-size: 14px;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .update-text {
+            letter-spacing: 0.5px;
+        }
+
+        #holdersTimer {
+            color: #4CAF50;
+            font-weight: bold;
+            font-family: 'Monaco', 'Courier New', monospace;
         }
 
         .search-box {
@@ -108,6 +196,8 @@
             border-radius: 10px;
             color: white;
             font-size: 16px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            letter-spacing: 0.5px;
             transition: all 0.3s;
         }
 
@@ -130,6 +220,7 @@
 
         .search-btn:hover {
             transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
         }
 
         /* Search Results */
@@ -164,12 +255,14 @@
             color: #999;
             text-transform: uppercase;
             margin-bottom: 5px;
+            letter-spacing: 0.5px;
         }
 
         .stat-value {
             font-size: 24px;
             font-weight: bold;
             color: #FFD700;
+            font-variant-numeric: tabular-nums;
         }
 
         /* Main Grid */
@@ -192,6 +285,12 @@
             border: 1px solid rgba(255, 215, 0, 0.2);
             border-radius: 15px;
             padding: 25px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .panel:hover {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
         }
 
         .panel h2 {
@@ -216,6 +315,7 @@
             color: #FFD700;
             font-size: 12px;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .winners-table td {
@@ -224,8 +324,16 @@
             font-size: 14px;
         }
 
+        .winners-table tr {
+            transition: background 0.2s ease;
+        }
+
         .winners-table tr:hover {
             background: rgba(255, 215, 0, 0.05);
+        }
+
+        .winners-table td:nth-child(4) {
+            font-weight: 600;
         }
 
         .wallet-link {
@@ -244,10 +352,12 @@
             color: #00BFFF;
             text-decoration: none;
             font-size: 20px;
+            transition: all 0.2s ease;
         }
 
         .tx-link:hover {
             color: #FFD700;
+            transform: scale(1.2);
         }
 
         /* Global Stats */
@@ -259,23 +369,33 @@
 
         .global-stat {
             background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 165, 0, 0.1));
-            padding: 20px;
+            padding: 15px;
             border-radius: 10px;
             border: 1px solid rgba(255, 215, 0, 0.3);
             text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .global-stat:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.2);
+            border-color: #FFD700;
         }
 
         .global-stat-value {
-            font-size: 32px;
+            font-size: 24px;
             font-weight: bold;
             color: #FFD700;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.5px;
         }
 
         .global-stat-label {
-            font-size: 12px;
+            font-size: 11px;
             color: #999;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         /* Hall of Fame */
@@ -294,6 +414,13 @@
             background: rgba(0, 0, 0, 0.3);
             border-radius: 8px;
             margin-bottom: 10px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .fame-item:hover {
+            background: rgba(255, 215, 0, 0.1);
+            transform: translateX(5px);
         }
 
         .fame-rank {
@@ -317,7 +444,8 @@
 
         /* Next Race Timer */
         .next-race {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            border: 2px solid #4CAF50;
             padding: 20px;
             border-radius: 10px;
             text-align: center;
@@ -327,11 +455,17 @@
         .next-race-label {
             font-size: 14px;
             margin-bottom: 10px;
+            color: #4CAF50;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .next-race-timer {
             font-size: 36px;
             font-weight: bold;
+            font-family: 'Monaco', 'Courier New', monospace;
+            text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+            color: #4CAF50;
         }
 
         /* Loading */
@@ -343,9 +477,9 @@
 
         .spinner {
             display: inline-block;
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(255, 215, 0, 0.3);
+            width: 30px;
+            height: 30px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
             border-top-color: #FFD700;
             border-radius: 50%;
             animation: spin 1s linear infinite;
@@ -356,23 +490,46 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Medals */
-        .medal {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            margin-right: 5px;
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .header {
+                padding: 8px 10px;
+            }
+            
+            .header-banner {
+                max-height: 150px;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            .global-stat {
+                padding: 12px;
+            }
+            
+            .global-stat-value {
+                font-size: 20px;
+            }
         }
-
-        .medal.gold { color: #FFD700; }
-        .medal.silver { color: #C0C0C0; }
-        .medal.bronze { color: #CD7F32; }
     </style>
 </head>
 <body>
-<div class="header">
-    <img src="images/banner.png" alt="DerbyFunScan" class="header-banner">
-</div>
+    <div class="container">
+        <!-- Header con banner -->
+        <div class="header">
+            <img src="../images/banner.png" alt="DerbyFunScan" class="header-banner">
+        </div>
+
+        <!-- Social Media Floating Icons -->
+        <div class="social-floating">
+            <a href="https://x.com/DerbyPump" target="_blank" class="social-icon" title="Follow us on Twitter">
+                <img src="../images/twitter.png" alt="Twitter">
+            </a>
+            <a href="https://derbyfun.gitbook.io/derby.fun" target="_blank" class="social-icon" title="Read our Gitbook">
+                <img src="../images/book.png" alt="Gitbook">
+            </a>
+        </div>
 
         <!-- Live Ticker -->
         <div class="live-ticker">
@@ -386,6 +543,11 @@
         <!-- Search Section -->
         <div class="search-section">
             <h3 class="search-title">🔍 Search Wallet Statistics</h3>
+            <!-- Holders Update Timer -->
+            <div class="holders-update-timer">
+                <span class="update-icon">🔄</span>
+                <span class="update-text">Next holders update in: <span id="holdersTimer">--:--</span></span>
+            </div>
             <div class="search-box">
                 <input type="text" class="search-input" id="searchInput" 
                        placeholder="Enter wallet address to see race statistics...">
@@ -407,7 +569,7 @@
                 </div>
             </div>
 
-            <!-- Right Panel - Stats & Hall of Fame Derby.Fun -->
+            <!-- Right Panel - Stats & Hall of Fame -->
             <div>
                 <!-- Next Race Timer -->
                 <div class="next-race">
@@ -451,6 +613,6 @@
         </div>
     </div>
 
-   <script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
