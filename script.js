@@ -1,7 +1,7 @@
 // script.js - Versión corregida para el Dashboard
 
 const CONFIG = {
-    HOLDERS_API: 'https://b5d8fe120b27.ngrok-free.app',
+    HOLDERS_API: 'https://apipumpfun.ngrok.app',
     SITE_URL: window.location.origin,
     UPDATE_INTERVAL: 30000
 };
